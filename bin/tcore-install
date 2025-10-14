@@ -1,0 +1,40 @@
+#!/usr/bin/env php
+<?php
+    require_once 'vendor/autoload.php';
+    echo "开始安装 TCore PHP 网站系统：\n";
+    /**
+     * 复制必要文件
+     */
+    $system = require_once TCorePath().'system/system.config.php';
+    foreach( $system['add'] as $source => $target ) {
+        $source = is_numeric( $source ) ? TCorePath()."system/{$source}" : $source;
+        if ( !is_file( $source ) ) { continue; }
+        $target = inFolder( $target );
+        if ( !is_file( $target ) ) {
+            copy( $source, $target );
+            echo "新增文件 => {$target}\n";
+        }
+    }
+    foreach( $system['update'] as $source => $target ) {
+        $source = is_numeric( $source ) ? TCorePath()."system/{$source}" : $source;
+        if ( !is_file( $source ) ) { continue; }
+        $target = inFolder( $target );
+        echo is_file( $target ) ? "新增文件 => {$target}\n" : "更新文件 => {$target}\n";
+        copy( $source, $target );
+    }
+    foreach( $system['delete'] as $target ) {
+        if ( !is_file( $target ) ) { continue; }
+        unlink( $target );
+        echo "删除文件 => {$target}\n";
+    }
+    foreach( $system['path'] as $target ) {
+        if ( is_dir( $target ) ) { continue; }
+        inFolder( $target );
+        echo "创建目录 => {$target}\n";
+    }
+    /**
+     * 安装完成
+     */
+    echo "----------\n";
+    echo "系统安装完成，请将您的运行目录修改为 'public'，并使用伪静态拦截所有请求到 'index.php'。\n";
+    echo "感谢您使用 TCore PHP ！\n";
