@@ -5,7 +5,7 @@
 // 安装
 composer require linnbenson/tcore-php
 
-// 如果您将此组件用作网站系统，请运行以下命令
+// 如果您将此组件用作网站系统，请运行以下命令1
 chmod +x vendor/bin/tcore-install && vendor/bin/tcore-install
 // 强制刷新所有: vendor/bin/tcore-install all
 ```
