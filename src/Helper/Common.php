@@ -1,5 +1,7 @@
 <?php
-    use Composer\InstalledVersions;
+    use Blocktrail\CryptoJSAES\CryptoJSAES;
+    use TCore\Bootstrap;
+
     /**
      * 变量检查：是否为 json
      * ---
@@ -186,6 +188,72 @@
         function endWith( $string, $prefix ) {
             if ( !is_string( $string ) || !is_string( $prefix ) ) { return false; }
             return substr( $string, -strlen( $prefix ) ) === $prefix;
+        }
+    }
+    /**
+     * 加密一段内容
+     * - [string]:加密文本, [string]|null:加密密钥
+     * return [string|null]:加密后的内容
+     */
+    if ( !function_exists( 'encrypt' ) ) {
+        function encrypt( $string, $key = null ) {
+            if ( Bootstrap::$status && $key === null ) { // 驱动已注册时从本地加载 key
+                $key = env( 'APP_KEY', 'DefaultKey' );
+            }
+            if ( empty( $key ) || !is_string( $key ) ) { return null; }
+            return CryptoJSAES::encrypt( toString( $string ), $key );
+        }
+    }
+    /**
+     * 解密一段内容
+     * - [string]:解密文本, [string]|null:解密密钥
+     * return [string|null]:解密后的内容
+     */
+    if ( !function_exists( 'decrypt' ) ) {
+        function decrypt( $string, $key = null ) {
+            if ( Bootstrap::$status && $key === null ) { // 驱动已注册时从本地加载 key
+                $key = env( 'APP_KEY', 'DefaultKey' );
+            }
+            if ( empty( $key ) || !is_string( $key ) ) { return null; }
+            return CryptoJSAES::decrypt( toString( $string ), $key );
+        }
+    }
+    /**
+     * 哈希一个参数
+     * - [string]:传入的内容
+     * - return [string|null]:返回哈希后的字符串或 null
+     */
+    if ( !function_exists( 'h' ) ) {
+        function h( $string ) {
+            $key = '';
+            if ( Bootstrap::$status ) { // 驱动已注册时从本地加载 key
+                $key = env( 'APP_KEY', 'DefaultKey' );
+            }
+            return hash( 'sha256', toString( $string ).$key );
+        }
+    }
+    /**
+     * 调试参数
+     * - [mixed]:传入的值, [bool]|true:是否退出程序
+     * return void
+     */
+    if ( !function_exists( 'dd' ) ) {
+        function dd( $val, $exit = true ) {
+            $echo = $val;
+            if ( is_json( $val ) ) {
+                $echo = "Json ".print_r( json_decode( $val ), true);
+            }else if ( is_uuid( $val ) ) {
+                $echo = "UUID( '{$val}' )";
+            }else if ( is_string( $val ) ) {
+                $echo = "String( '{$val}' )";
+            }else if ( is_numeric( $val ) ) {
+                $echo = "Number( '{$val}' )";
+            }else if ( is_bool( $val ) ) {
+                $val = $val ? 'true' : 'false'; $echo = "Boolean( '{$val}' )";
+            }else if ( $val === null ) {
+                $echo = "Null( '' )";
+            }
+            print_r( $echo ); echo PHP_EOL.PHP_EOL; if ( $exit ) { exit(); }
         }
     }
     /**

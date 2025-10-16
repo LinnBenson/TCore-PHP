@@ -46,6 +46,18 @@ chmod +x vendor/bin/tcore-install && vendor/bin/tcore-install
 - 判断内容是否以指定内容结束
   - `endWith( [string]:内容, [string]:结束的参数 )`
   - return [boolean]:判断结果
+- 加密一段内容
+  - `encrypt( [string]:加密文本, [string]|null:加密密钥 )`
+  - return [string|null]:加密后的内容
+- 解密一段内容
+  - `encrypt( [string]:解密文本, [string]|null:解密密钥 )`
+  - return [string|null]:解密后的内容
+- 哈希一个参数
+  - `h( [string]:传入的内容 )`
+  - return [string|null]:返回哈希后的字符串或 null
+- 调试参数
+  - `dd( [mixed]:传入的值, [bool]|true:是否退出程序 )`
+  - return void
 
 ### 核心驱动器 => TCore\Bootstrap
 - 驱动安装状态
@@ -59,6 +71,12 @@ chmod +x vendor/bin/tcore-install && vendor/bin/tcore-install
   - `Bootstrap::init( [array]|[]:配置信息 )`
   - 配置数组中包含: debug, timezone
   - return true
+- [站点] 插件权限介入
+  - `Bootstrap::permission( [string]:权限名称, [mixed]|null:传递参数 )`
+  - return [mixed]:传递参数
+- 记录日志
+  - `Bootstrap::log( [string]:日志名称, [string|object]日志信息, [string]|null:日志标题 )`
+  - return [boolean]:日志记录结果
 - 缓存处理
   - `Bootstrap::cache( [thread|file]:缓存方式, [string]:缓存名称, [function]:缓存内容 )`
   - return [mixed]:缓存值
@@ -85,9 +103,12 @@ chmod +x vendor/bin/tcore-install && vendor/bin/tcore-install
 - Config 配置
   - `config( [string]:键名, [mixed]|null:默认值 )`
   - return [mixed]:键值
-- 哈希一个参数
-  - `h( [string]:传入的内容 )`
-  - return [string|null]:返回哈希后的字符串或 null
 - 插件使用
   - `plugin( [string]:插件名称 )`
   - return [object|null]:插件对象
+
+#### [站点] 插件权限声明
+- 系统启动运行
+  - SYSTEM_STARTUP()
+- RETURN_RESULTS
+  - RETURN_RESULTS( [mixed]:系统启动结果 )

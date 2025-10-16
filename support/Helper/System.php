@@ -63,19 +63,10 @@
         return $value;
     }
     /**
-     * 哈希一个参数
-     * - [string]:传入的内容
-     * - return [string|null]:返回哈希后的字符串或 null
-     */
-    function h( $content ) {
-        if ( !is_string( $content ) ) { return null; }
-        return hash( 'sha256', $content.env( 'APP_KEY', 'DefaultKey' ) );
-    }
-    /**
      * 插件使用
      * - [string]:插件名称
      * return [object|null]:插件对象
      */
     function plugin( $name ) {
-        return null;
+        // ........
     }
