@@ -1,0 +1,46 @@
+#!/usr/bin/env php
+<?php
+    require_once 'vendor/autoload.php';
+    echo "\033[44m开始安装 TCore PHP 网站系统：\033[0m\n";
+    /**
+     * 复制必要文件
+     */
+    $system = require_once TCorePath().'system/system.config.php';
+    foreach( $system['add'] as $source => $target ) {
+        $source = is_numeric( $source ) ? TCorePath()."system/{$target}" : $source;
+        if ( !is_file( $source ) ) { continue; }
+        $target = inFolder( $target );
+        if ( $argv[1] === 'all' || !is_file( $target ) ) {
+            copy( $source, $target );
+            echo "\033[32m新增文件\033[0m => {$target}\n";
+        }
+    }
+    foreach( $system['update'] as $source => $target ) {
+        $source = is_numeric( $source ) ? TCorePath()."system/{$target}" : $source;
+        if ( !is_file( $source ) ) { continue; }
+        $target = inFolder( $target );
+        echo !is_file( $target ) ? "\033[32m新增文件\033[0m => {$target}\n" : "\033[32m更新文件\033[0m => {$target}\n";
+        copy( $source, $target );
+    }
+    foreach( $system['delete'] as $target ) {
+        if ( !is_file( $target ) ) { continue; }
+        unlink( $target );
+        echo "\033[32m删除文件\033[0m => {$target}\n";
+    }
+    foreach( $system['path'] as $target ) {
+        if ( is_dir( $target ) ) { continue; }
+        inFolder( $target );
+        echo "\033[32m创建目录\033[0m => {$target}\n";
+    }
+    /**
+     * env 创建
+     */
+    $env = file_get_contents( TCorePath()."system/.env" );
+    file_put_contents( $argv[1] === 'all' || !is_file( '.env' ) ? '.env' : '.env.example', $env );
+    echo "\033[32m更新\033[0m => .env 配置文件\n";
+    /**
+     * 安装完成
+     */
+    echo "----------\n";
+    echo "\033[44m系统安装完成，请将您的运行目录修改为 'public'，并使用伪静态拦截所有请求到 'index.php'。\033[0m\n";
+    echo "\033[44m感谢您使用 TCore PHP ！\033[0m\n";
