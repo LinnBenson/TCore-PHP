@@ -1,4 +1,5 @@
 # TCore PHP
+> 1.0.4
 > 方便您继续使用 PHP 完成您的开发
 
 ```
@@ -26,6 +27,9 @@ chmod +x vendor/bin/tcore-install && vendor/bin/tcore-install
 - 删除目录
   - `deleteDir( [string]:目录路径 )`
   - return [boolean]:删除结果
+- 复制目录
+  - `copyDir( [string]:源目录路径, [string]:目标路径 )`
+  - return [boolean]:复制结果
 - 强制转为字符串
   - `toString( [mixed]:转换内容 )`
   - return [string]:转换后的内容
@@ -58,12 +62,17 @@ chmod +x vendor/bin/tcore-install && vendor/bin/tcore-install
 - 调试参数
   - `dd( [mixed]:传入的值, [bool]|true:是否退出程序 )`
   - return void
+- 判断是否为公开方法
+  - `isPublic( [object]:对象, [string]:方法名称 )`
+  - return [boolean]:判断结果
 
 ### 核心驱动器 => TCore\Bootstrap
 - 驱动安装状态
   - [boolean]|false Bootstrap::$status
 - 存储器目录
   - [string]|storage/ Bootstrap::$storage
+- 驱动器版本号
+  - [string] Bootstrap::$version
 - [站点] 注册驱动
   - `Bootstrap::register( [function]|null:回调函数 )`
   - return [mixed]:回调结果或 null
@@ -107,8 +116,45 @@ chmod +x vendor/bin/tcore-install && vendor/bin/tcore-install
   - `plugin( [string]:插件名称 )`
   - return [object|null]:插件对象
 
+#### [站点] 插件渲染器 TCore\Slots\Plugin
+- 插件名称
+  - [string] $this->name
+- 插件根目录
+  - [string] $this->path
+- 插件版本号
+  - [string] $this->version
+- 插件描述
+  - [string] $this->describe
+- 依赖
+  - [array] $this->rely
+- 兼容性
+  - [array] $this->compatible
+  - [ '1.0.1', '2.0.3' ] => 兼容 1.0.1 - 2.0.3
+  - [ '*', '2.0.3' ] => 兼容 2.0.3 以下
+- 权限注册信息
+  - [array] $this->permission
+- 权限注册
+  - `$this->intervene( [string]:权限名称, [function|string]:运行方法 )`
+  - return [boolean]:挂载结果
+- 批量引用文件
+  - `$this->import( [string|array]:需要引用的文件 )`
+  - return [mixed]:返回引用的结果
+- 注册到自动加载
+  - `$this->auoload( [array]:需要注册的文件 )`
+  - return [boolean]:注册结果
+- Config 配置
+  - `$this->config( [string]:键名, [mixed]|null:默认值 )`
+  - return [mixed]:键值
+
 #### [站点] 插件权限声明
 - 系统启动运行
   - SYSTEM_STARTUP()
-- RETURN_RESULTS
-  - RETURN_RESULTS( [mixed]:系统启动结果 )
+  - 不处理返回值
+- 修改或监听系统启动返回结果
+  - RETURN_RESULT( [mixed]:系统启动结果 )
+  - 传入: [mixed]:系统启动结果
+  - 传出: [mixed]:增加或修改的系统启动结果
+- 修改配置查询信息
+  - QUERY_CONFIGURATION_INFORMATION( [string]:配置查询文件 )
+  - 传入: [string]:配置查询文件
+  - 传出: [array]:增加或修改的配置信息

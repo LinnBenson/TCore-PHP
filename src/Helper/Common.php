@@ -104,6 +104,35 @@
         }
     }
     /**
+     * 复制目录
+     * - [string]:源目录路径, [string]:目标路径
+     * return [boolean]:复制结果
+     */
+    if ( !function_exists( 'copyDir' ) ) {
+        function copyDir( $src, $dst ) {
+            // 去掉末尾的 /
+            $src = rtrim( $src, '/\\' );
+            $dst = rtrim( $dst, '/\\' );
+            // 检查目录可用性
+            if ( !is_dir( $src ) ) { return false; }
+            if ( !is_dir( $dst ) ) { mkdir( $dst, 0777, true ); }
+            // 开始递归复制
+            $dir = opendir( $src );
+            while ( false !== ( $file = readdir( $dir ) ) ) {
+                if ( $file == '.' || $file == '..' ) { continue; }
+                $srcFile = "{$src}/{$file}";
+                $dstFile = "{$dst}/{$file}";
+                if ( is_dir( $srcFile ) ) {
+                    copyDir( $srcFile, $dstFile );
+                } else {
+                    copy( $srcFile, $dstFile );
+                }
+            }
+            closedir( $dir );
+            return true;
+        }
+    }
+    /**
      * 时间值转换
      * - [number|string]|null:转换内容
      * - 转换内容为 null 则输出当前时间
@@ -254,6 +283,16 @@
                 $echo = "Null( '' )";
             }
             print_r( $echo ); echo PHP_EOL.PHP_EOL; if ( $exit ) { exit(); }
+        }
+    }
+    /**
+     * 判断是否为公开方法
+     * - [object]:对象, [string]:方法名称
+     * return [boolean]:判断结果
+     */
+    if ( !function_exists( 'isPublic' ) ) {
+        function isPublic( $object, $method ) {
+            return ( method_exists( $object, $method ) && !(new \ReflectionMethod( $object, $method ))->isPrivate() );
         }
     }
     /**

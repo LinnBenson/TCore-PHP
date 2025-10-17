@@ -13,6 +13,7 @@
         ];
         public static $status = false; // 驱动安装状态
         public static $storage = 'storage/'; // 存储器目录
+        public static $version = '1.0.5'; // 驱动器版本号
         /**
          * 注册驱动
          * - [function]|null:回调函数
@@ -20,8 +21,6 @@
          */
         public static function register( $method = null ) {
             if ( Bootstrap::$status ) { return null; } // 要求驱动未注册
-            // 标记安装
-            Bootstrap::$status = true;
             // 导入系统通用函数
             require_once TCorePath().'support/Helper/System.php';
             // 注册自动加载
@@ -40,6 +39,8 @@
                 'debug' => config( 'app.debug' ),
                 'timezone' => config( 'app.timezone' )
             ]);
+            // 标记安装
+            Bootstrap::$status = true;
             // 权限介入
             Bootstrap::permission( 'SYSTEM_STARTUP' );
             // 回调结果
@@ -82,7 +83,11 @@
             // 顺序执行
             foreach( $plugins as $plugin ) {
                 // 插件介入
-                // ........
+                $plugin = plugin( $plugin );
+                if ( !is_object( $plugin ) ) { continue; }
+                if ( isset( $plugin->permission[$permission] ) && is_callable( $plugin->permission[$permission] ) ) {
+                    $argv = $plugin->permission[$permission]( $argv );
+                }
             }
             return $argv;
         }
@@ -115,8 +120,14 @@
          */
         private static function autoload() {
             spl_autoload_register(function( $class ) {
-                if ( isset( Bootstrap::$cache['autoload'][$class] ) && is_file( Bootstrap::$cache['autoload'][$class] ) ) {
-                    require_once import( Bootstrap::$cache['autoload'][$class] );
+                if ( isset( Bootstrap::$cache['autoload'][$class] ) ) {
+                    import( Bootstrap::$cache['autoload'][$class] );
+                    return true;
+                }
+                if ( startWith( $class, 'App\\' ) ) {
+                    $path = str_replace( '\\', '/', $class );
+                    $path = preg_replace( '/^App/', 'app', $path );
+                    if ( file_exists( "{$path}.php" ) ) { import( "{$path}.php", false ); }
                     return true;
                 }
                 return false;
