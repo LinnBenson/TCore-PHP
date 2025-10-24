@@ -24,7 +24,6 @@
             // 导入系统通用函数
             require_once TCorePath().'support/Helper/System.php';
             // 注册自动加载
-            Bootstrap::$cache['autoload'] = import( 'support/autoload.config.php' );
             Bootstrap::autoload();
             // 加载 .env 文件
             try {
@@ -44,14 +43,14 @@
             // 权限介入
             Bootstrap::permission( 'SYSTEM_STARTUP' );
             // 回调结果
-            return Bootstrap::permission( 'RETURN_RESULT', is_callable( $method ) ? $method() : null );
+            return Bootstrap::permission( 'RETURN_RESULT', is_callable( $method ) ? $method() : null, 'last' );
         }
         /**
          * 初始化程序
          * - [array]|[]:配置信息
          * return true
          */
-        public static function init( $config = [] ) {
+        public static function init( array $config = [] ) {
             $config = is_array( $config ) ? $config : [];
             $debug = $config['debug'] ?? false;
             $timezone = $config['timezone'] ?? 'Asia/Singapore';
@@ -71,23 +70,43 @@
         }
         /**
          * 插件权限介入
-         * - [string]:权限名称, [mixed]|null:传递参数
+         * - [string]:权限名称, [mixed]|null:传递参数, [string]|null:回传方式, ...[mixed]:附加参数
          * return [mixed]:传递参数
          */
-        public static function permission( $permission, $argv = null ) {
-            if ( !Bootstrap::$status ) { return $argv; } // 要求驱动已注册
+        public static function permission( string $permission, $argv = null, $echo = null, ...$addArgv ) {
+            if ( !Bootstrap::$status ) { // 要求驱动已注册
+                switch ( $echo ) {
+                    case 'last': return $argv; break;
+                    case 'all': return null; break;
+
+                    default: return null; break;
+                }
+            }
             // 加载执行的插件
             $plugins = config( "permission.{$permission}" );
             if ( !is_array( $plugins ) ) { $plugins = []; }
-            if ( empty( $plugins ) ) { return $argv; }
             // 顺序执行
+            $results = [];
             foreach( $plugins as $plugin ) {
                 // 插件介入
                 $plugin = plugin( $plugin );
                 if ( !is_object( $plugin ) ) { continue; }
                 if ( isset( $plugin->permission[$permission] ) && is_callable( $plugin->permission[$permission] ) ) {
-                    $argv = $plugin->permission[$permission]( $argv );
+                    $data = call_user_func( $plugin->permission[$permission], $argv, ...$addArgv );
+                    if ( $data !== null ) { $results[] = $data; }
                 }
+            }
+            switch ( $echo ) {
+                case 'last':
+                    if ( count( $results ) === 0 ) { return $argv; }
+                    return $results[count( $results ) - 1];
+                    break;
+                case 'all':
+                    if ( count( $results ) === 0 ) { return null; }
+                    return array_merge( ...$results );
+                    break;
+
+                default: return null; break;
             }
             return $argv;
         }
@@ -96,7 +115,7 @@
          * - [string]:日志名称, [string|object]日志信息, [string]|null:日志标题
          * return [boolean]:日志记录结果
          */
-        public static function log( $name, $info, $title = null ) {
+        public static function log( string $name, $info, $title = null ) {
             // 参数检查
             if ( empty( $name ) || !is_string( $name ) || empty( $info ) ) { return false; }
             // 日志保存位置
@@ -121,13 +140,18 @@
         private static function autoload() {
             spl_autoload_register(function( $class ) {
                 if ( isset( Bootstrap::$cache['autoload'][$class] ) ) {
-                    import( Bootstrap::$cache['autoload'][$class] );
+                    import( Bootstrap::$cache['autoload'][$class], false );
                     return true;
-                }
-                if ( startWith( $class, 'App\\' ) ) {
+                }else if ( startWith( $class, 'App\\' ) ) {
                     $path = str_replace( '\\', '/', $class );
                     $path = preg_replace( '/^App/', 'app', $path );
                     if ( file_exists( "{$path}.php" ) ) { import( "{$path}.php", false ); }
+                    return true;
+                }else if ( startWith( $class, 'TCore\\' ) ) {
+                    $path = str_replace( '\\', '/', $class );
+                    $path = preg_replace( '/^TCore\\//', '', $path );
+                    $path = TCorePath().'support/'.$path.'.php';
+                    if ( file_exists( $path ) ) { import( $path, false ); }
                     return true;
                 }
                 return false;
@@ -138,7 +162,7 @@
          * - [thread|file]:缓存方式, [string]:缓存名称, [function]:缓存内容
          * return [mixed]:缓存值
          */
-        public static function cache( $type, $name, $method ) {
+        public static function cache( string $type, string $name, callable $method ) {
             if ( !is_callable( $method ) ) { return null; }
             switch ( $type ) {
                 case 'thread':

@@ -65,6 +65,9 @@ chmod +x vendor/bin/tcore-install && vendor/bin/tcore-install
 - 判断是否为公开方法
   - `isPublic( [object]:对象, [string]:方法名称 )`
   - return [boolean]:判断结果
+- 渲染视图模板
+  - `view( [string|array]:模板路径, [array]|[]:模板数据 )`
+  - return [string]:渲染结果
 
 ### 核心驱动器 => TCore\Bootstrap
 - 驱动安装状态
@@ -81,7 +84,7 @@ chmod +x vendor/bin/tcore-install && vendor/bin/tcore-install
   - 配置数组中包含: debug, timezone
   - return true
 - [站点] 插件权限介入
-  - `Bootstrap::permission( [string]:权限名称, [mixed]|null:传递参数 )`
+  - `Bootstrap::permission( [string]:权限名称, [mixed]|null:传递参数, [string]|null:回传方式, ...[mixed]:附加参数 )`
   - return [mixed]:传递参数
 - 记录日志
   - `Bootstrap::log( [string]:日志名称, [string|object]日志信息, [string]|null:日志标题 )`
@@ -97,6 +100,79 @@ chmod +x vendor/bin/tcore-install && vendor/bin/tcore-install
 - 配置文件覆盖
   - `Tool::coverConfig( [string]:文件路径, [array]:配置信息 )`
   - return [boolean]:覆盖结果
+
+### 请求构造器 => TCore\Handler\Request
+- 预请求代码
+  - [int]|200 $this->code
+- 允许的请求类型
+  - [array]|[ 'Http', 'Cli', 'Websocket' ] $this->type
+- 请求类型
+  - [string] $this->type
+- 请求用户
+  - [object|null] $this->user
+- 请求对象属性
+  - [string] $this->id 请求 ID
+  - [string] $this->lang 请求语言
+  - [string] $this->method 请求方法
+  - [string] $this->target 请求目标
+  - [string] $this->category 请求类别
+  - [string] $this->source 请求来源
+  - [array] $this->header Header 参数
+  - [array] $this->get GET 参数
+  - [array] $this->post POST 参数
+  - [array] $this->cookie Cookie 参数
+  - [array] $this->file 上传文件参数
+  - [string] $this->ip 请求 IP 地址
+  - [array] $this->share 请求共享数据
+  - save( [string]:键名, [mixed]:键值 ) 保存数据到 Cookie
+  - return( [Request]:请求对象, [mixed]:返回数据, [array]:响应头 ) 自定义接口返回数据格式
+#### 方法说明
+- 初始化请求
+  - `new Request( [array]:请求数据 )`
+  - return void
+- 初始化请求
+  - `Request->init( [array]|null:请求数据 )`
+  - return void
+- 翻译文本
+  - `Request->t( [string]:文本键, [array]:替换数据 )`
+  - return [string]:语言包内容
+- 接口返回
+  - `Request->echo( [boolean|int]:状态, [mixed]|null:返回数据, [int]|null:响应代码, [array]:响应头 )`
+  - return [string]:返回数据
+
+
+### 路由构造器 => TCore\Handler\Router
+- 注册路由
+  - `Router::register( [strng]:注册类型, [array|function]:路由列表或函数, [string]|null:路由分类 )`
+  - return [boolean]:注册结果
+- 搜索路由
+  - `Router::search( [Request]:请求对象, [array]:路由数据, [array]|[]:附加参数 )`
+  - return [mixed]:路由结果
+- 路由错误处理
+  - `Router::error( [Request]:请求对象, [string]:错误信息, [int]:错误代码 )`
+  - return [mixed]:错误处理结果
+- 使用控制器
+  - `Router::useController( [string|array]:控制器, [Request]:请求对象, ...[mixed]:附加参数 )`
+  - return [mixed]:控制器返回结果
+- 添加路由
+  - `Router::add( [string]:路由路径, [string]|ANY:路由方法 )`
+  - return [object|null]:路由结果
+
+#### API 异常错误 => TCore\Exception\ApiException
+- 错误代码
+  - [int] $this->code
+- 错误信息
+  - [mixed] $this->message
+- 构造错误
+  - `new ApiException( [mixed]:错误信息, [int]|400:错误代码 )`
+  - return void
+
+#### 写入日志的异常错误 => TCore\Exception\LogException
+- 错误信息
+  - [mixed] $this->message
+- 构造错误
+  - `new LogException( [mixed]:错误信息 )`
+  - return void
 
 #### 第三方库引用声明
 - vlucas/phpdotenv
@@ -149,12 +225,24 @@ chmod +x vendor/bin/tcore-install && vendor/bin/tcore-install
 #### [站点] 插件权限声明
 - 系统启动运行
   - SYSTEM_STARTUP()
-  - 不处理返回值
+  - 不处理任何值
 - 修改或监听系统启动返回结果
-  - RETURN_RESULT( [mixed]:系统启动结果 )
+  - RETURN_RESULT
   - 传入: [mixed]:系统启动结果
   - 传出: [mixed]:增加或修改的系统启动结果
 - 修改配置查询信息
-  - QUERY_CONFIGURATION_INFORMATION( [string]:配置查询文件 )
+  - QUERY_CONFIGURATION_INFORMATION
   - 传入: [string]:配置查询文件
-  - 传出: [array]:增加或修改的配置信息
+  - 传出: [array]:增加的配置信息
+- 挂载语言包
+  - QUERY_LANGUAGE_PACKAGE
+  - 传入: [string]:语言, [string]:访问目标
+  - 传出: [array]:增加的语言包
+- 请求构造完成
+  - REQUEST_INITIALIZATION_COMPLETED
+  - 传入: [Reuqest]:请求对象
+  - 传出: 不处理返回内容
+- 修改或监听接口返回数据
+  - RETURN_INTERFACE_DATA
+  - 传入: [array]:接口返回数据, [Reuqest]:请求对象
+  - 传出: [array]:修改的接口返回数据

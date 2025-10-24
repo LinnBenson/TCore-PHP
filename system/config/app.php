@@ -30,5 +30,9 @@
         /**
          * 运行时区
          */
-        'timezone' => env( 'APP_TIMEZONE', 'UTC' )
+        'timezone' => env( 'APP_TIMEZONE', 'UTC' ),
+        /**
+         * 视图渲染器
+         */
+        'view' => env( 'APP_VIEW', null ),
     ];

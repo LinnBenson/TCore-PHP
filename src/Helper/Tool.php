@@ -10,7 +10,7 @@
          * - [number]:生成长度, [all|number|letter]|all:随机生成类型
          * return [string]:随机内容
          */
-        public static function rand( $length, $type = 'all' ) {
+        public static function rand( int $length, string $type = 'all' ) {
             if ( $type === 'all' ) {
                 $data = array( 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
                 'i', 'j', 'k', 'l','m', 'n', 'o', 'p', 'q', 'r', 's',
@@ -41,7 +41,7 @@
          * - [string]:文件路径, [array]:配置信息
          * return [boolean]:覆盖结果
          */
-        public static function coverConfig( $file, $arr ) {
+        public static function coverConfig( string $file, array $arr ) {
             // 判断配置类型
             if ( endWith( $file, '.php' ) ) {
                 $type = 'php';

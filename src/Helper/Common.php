@@ -77,7 +77,7 @@
      * return [string]:传入的路径
      */
     if ( !function_exists( 'inFolder' ) ) {
-        function inFolder( $dir, $permissions = 0777 ) {
+        function inFolder( string $dir, int $permissions = 0777 ) {
             $path = preg_match( '/[^\/\\\\]+\.\w+$/' , $dir ) ? dirname( $dir ) : $dir;
             if ( !is_dir( $path ) ) {
                 if ( !mkdir( $path, $permissions, true ) && !is_dir( $path ) ) {
@@ -93,7 +93,7 @@
      * return [boolean]:删除结果
      */
     if ( !function_exists( 'deleteDir' ) ) {
-        function deleteDir( $dir ) {
+        function deleteDir( string $dir ) {
             if ( !is_dir( $dir ) ) { return false; }
             foreach( scandir( $dir ) as $file ) {
                 if ( $file === '.' || $file === '..' ) { continue; }
@@ -109,7 +109,7 @@
      * return [boolean]:复制结果
      */
     if ( !function_exists( 'copyDir' ) ) {
-        function copyDir( $src, $dst ) {
+        function copyDir( string $src, string $dst ) {
             // 去掉末尾的 /
             $src = rtrim( $src, '/\\' );
             $dst = rtrim( $dst, '/\\' );
@@ -154,7 +154,7 @@
      * return [mixed]:序列化或反序列化后的参数
      */
     if ( !function_exists( 'toValue' ) ) {
-        function toValue( $value, $save ) {
+        function toValue( $value, bool $save ) {
             if ( $save ) {
                 if ( is_bool( $value ) ) { return $value ? '[:true:]' : '[:false:]'; }
                 if ( is_null( $value ) ) { return '[:null:]'; }
@@ -177,7 +177,7 @@
      * return [array]数组
      */
     if ( !function_exists( 'toArray' ) ) {
-        function toArray( $str ) {
+        function toArray( string $str ) {
             if ( !is_string( $str ) ) { return []; }
             $result = [];
             foreach ( explode( '|', $str ) as $item ) {
@@ -203,7 +203,7 @@
      * return [boolean]:判断结果
      */
     if ( !function_exists( 'startWith' ) ) {
-        function startWith( $string, $prefix ) {
+        function startWith( string $string, string $prefix ) {
             if ( !is_string( $string ) || !is_string( $prefix ) ) { return false; }
             return substr( $string, 0, strlen( $prefix ) ) === $prefix;
         }
@@ -214,7 +214,7 @@
      * return [boolean]:判断结果
      */
     if ( !function_exists( 'endWith' ) ) {
-        function endWith( $string, $prefix ) {
+        function endWith( string $string, string $prefix ) {
             if ( !is_string( $string ) || !is_string( $prefix ) ) { return false; }
             return substr( $string, -strlen( $prefix ) ) === $prefix;
         }
@@ -267,7 +267,7 @@
      * return void
      */
     if ( !function_exists( 'dd' ) ) {
-        function dd( $val, $exit = true ) {
+        function dd( $val, bool $exit = true ) {
             $echo = $val;
             if ( is_json( $val ) ) {
                 $echo = "Json ".print_r( json_decode( $val ), true);
@@ -291,8 +291,58 @@
      * return [boolean]:判断结果
      */
     if ( !function_exists( 'isPublic' ) ) {
-        function isPublic( $object, $method ) {
+        function isPublic( object $object, string $method ) {
             return ( method_exists( $object, $method ) && !(new \ReflectionMethod( $object, $method ))->isPrivate() );
+        }
+    }
+    /**
+     * 渲染视图模板
+     * - [string|array]:模板路径, [array]|[]:模板数据
+     * return [string]:渲染结果
+     */
+    if ( !function_exists( 'view' ) ) {
+        function view( $template, array $data = [] ) {
+            if ( Bootstrap::$status && !empty( config( 'app.view' ) && is_object( plugin( config( 'app.view' ) ) ) ) ) {
+                return plugin( config( 'app.view' ) )->render( $template, $data );
+            }else {
+                $error404 = function() {
+                    return view(
+                        TCorePath().'system/resource/view/error.view.php',
+                        [ 'code' => 404, 'msg' => 'View Not Found.' ]
+                    );
+                };
+                $code = '';
+                if ( is_string( $template ) ) {
+                    $type = endWith( $template, '.php' ) ? 'php' : 'html';
+                    if ( !file_exists( $template ) ) { return $error404(); }
+                    $code = file_get_contents( $template );
+                }else if ( is_array( $template ) ) {
+                    $type = $template[0];
+                    if ( $type === 'code' ) {
+                        $type = 'html';
+                        $code = $template[1];
+                    }
+                    if ( $type === 'file' ) {
+                        $type = endWith( $template[1], '.php' ) ? 'php' : 'html';
+                        if ( !file_exists( $template[1] ) ) { return $error404(); }
+                        $code = file_get_contents( $template[1] );
+                    }
+                }
+                if ( $type === 'php' ) {
+                    $viewFileOriginalCode = $code;
+                    ob_start();
+                        extract( $data );
+                        eval( '?>'.$viewFileOriginalCode );
+                    $viewFileOriginalCode = ob_get_clean();
+                    return $viewFileOriginalCode;
+                }else if ( $type === 'html' ) {
+                    foreach ( $data as $key => $value ) {
+                        $code = str_replace( "{{{$key}}}", $value, $code );
+                    }
+                    return $code;
+                }
+                return $error404();
+            }
         }
     }
     /**

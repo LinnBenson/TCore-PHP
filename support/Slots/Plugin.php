@@ -22,14 +22,14 @@
          * - [string]:权限名称, [function|string]:运行方法
          * return [boolean]:挂载结果
          */
-        public function intervene( $name, $method ) {
+        public function intervene( string $name, $method ) {
             // 检查权限合法性
             $plugins = config( "permission.{$name}" );
             if ( !is_array( $plugins ) || !in_array( $this->name, $plugins ) ) { return false; }
             // 开始写入权限
             if ( is_string( $method ) && isPublic( $this, $method ) ) {
-                $method = function( $data = null )use ( $method ) {
-                    return $this->$method( $data );
+                $method = function( ...$data )use ( $method ) {
+                    return $this->$method( ...$data );
                 };
             }
             if ( !is_callable( $method ) ) { return false; }
@@ -55,7 +55,7 @@
          * - [array]:需要注册的文件
          * return [boolean]:注册结果
          */
-        public function auoload( $data = [] ) {
+        public function auoload( array $data = [] ) {
             foreach( $data as $key => $value ) {
                 $data[$key] = $this->path.$value;
             }
@@ -66,7 +66,7 @@
          * - [string]:键名, [mixed]|null:默认值
          * return [mixed]:键值
          */
-        public function config( $key, $default = null ) {
+        public function config( string $key, $default = null ) {
             $value = Bootstrap::cache( 'thread', "config:plugin_{$this->name}", function() {
                 $result = [];
                 $systemFile = $this->path.'config.php';

@@ -7,6 +7,7 @@
      */
     $system = require_once TCorePath().'system/system.config.php';
     foreach( $system['add'] as $source => $target ) {
+        $source = explode( '#', $source )[0];
         $source = is_numeric( $source ) ? TCorePath()."system/{$target}" : $source;
         if ( !is_file( $source ) ) { continue; }
         $target = inFolder( $target );
@@ -16,6 +17,7 @@
         }
     }
     foreach( $system['update_file'] as $source => $target ) {
+        $source = explode( '#', $source )[0];
         $source = is_numeric( $source ) ? TCorePath()."system/{$target}" : $source;
         if ( !is_file( $source ) ) { continue; }
         $target = inFolder( $target );
@@ -23,6 +25,8 @@
         copy( $source, $target );
     }
     foreach( $system['update_dir'] as $source => $target ) {
+        $source = explode( '#', $source )[0];
+        $source = is_numeric( $source ) ? TCorePath()."system/{$target}" : $source;
         if ( !is_dir( $source ) ) { continue; }
         copyDir( $source, inFolder( $target ) );
         echo "\033[32m更新目录\033[0m => {$target}\n";

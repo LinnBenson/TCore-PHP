@@ -5,7 +5,12 @@
             'config/app.php',
             'config/database.php',
             'config/permission.php',
-            'public/index.php'
+            'public/index.php',
+            'resource/lang/zh-CN/base.php',
+            'resource/lang/zh-CN/validate.php',
+            TCorePath().'system/router/template.router.php#1' => 'router/view.router.php',
+            TCorePath().'system/router/template.router.php#2' => 'router/api.router.php',
+            TCorePath().'system/router/template.router.php#3' => 'router/storage.router.php'
         ],
         // 强制复制文件
         'update_file' => [
@@ -26,7 +31,7 @@
         ],
         // 删除目录
         'delete_dir' => [
-
+            '.well-known'
         ],
         // 保持目录存在
         'path' => [
